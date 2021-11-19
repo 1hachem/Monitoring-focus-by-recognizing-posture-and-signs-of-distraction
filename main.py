@@ -24,6 +24,8 @@ focus_index = [100]
 positions = defaultdict(list)
 face_edge_r = defaultdict(list)
 face_edge_l = defaultdict(list)
+eye_1 = defaultdict(list)
+eye_2 = defaultdict(list)
 
 with mp_face_mesh.FaceMesh(
         max_num_faces=1,
@@ -37,6 +39,7 @@ with mp_face_mesh.FaceMesh(
 
         while cap.isOpened():
             success, image = cap.read()
+            image = cv2.flip(image, 1)
             if not success:
                 print("Ignoring empty camera frame.")
                 # If loading a video, use 'break' instead of 'continue'.
@@ -79,6 +82,31 @@ with mp_face_mesh.FaceMesh(
                         away += 1
 
                     if b < thresh2:
+                        cv2.putText(image, "distracted", (0, 100), font,
+                                    1, (0, 255, 0), 2, cv2.LINE_AA)
+                        away += 1
+
+                    d5 = np.sqrt((face[160][0] - face[144][0])**2 + (face[160][1] - face[144][1])**2)
+                    d6 = np.sqrt((face[158][0] - face[153][0])**2 + (face[158][1] - face[153][1])**2)
+                    d7 = np.sqrt((face[33][0] - face[133][0])**2 + (face[33][1] - face[133][1])**2)
+
+                    d8 = np.sqrt((face[385][0] - face[380][0])**2 + (face[385][1] - face[380][1])**2)
+                    d9 = np.sqrt((face[387][0] - face[373][0])**2 + (face[387][1] - face[373][1])**2)
+                    d10 = np.sqrt((face[362][0] - face[263][0])**2 + (face[362][1] - face[263][1])**2)
+
+                    thresh_eye = 0.25
+
+                    if (d5 + d6) / (2 * d7) < thresh_eye and (d8 + d9) / (2 * d10) < thresh_eye:
+                        cv2.putText(image, "distracted", (0, 100), font,
+                                    1, (0, 255, 0), 2, cv2.LINE_AA)
+                        away += 1
+
+                    d11 = np.sqrt((face[13][0] - face[14][0])**2 + (face[13][1] - face[14][1])**2)
+                    d12 = np.sqrt((face[78][0] - face[308][0])**2 + (face[78][1] - face[308][1])**2)
+
+                    thresh_yawn = 1.5
+
+                    if d11 / d12 > thresh_yawn:
                         cv2.putText(image, "distracted", (0, 100), font,
                                     1, (0, 255, 0), 2, cv2.LINE_AA)
                         away += 1
@@ -128,6 +156,7 @@ with mp_face_mesh.FaceMesh(
                      401, 366, 447, 389, 372, 251, 284, 332, 297]
                 l = [148, 176, 140, 149, 170, 169, 136, 172, 138, 215,
                      177, 137, 227, 143, 162, 21, 54, 103, 67, 109]
+
                 for face in results_face.multi_face_landmarks:
                     i = 0
                     for landmark in face.landmark:
@@ -187,14 +216,16 @@ with mp_face_mesh.FaceMesh(
             d2 = np.sqrt((hand_1_x_c-face_r_x_c)**2+(hand_1_y_c-face_r_y_c)**2)
             d3 = np.sqrt((hand_2_x_c-face_l_x_c)**2+(hand_2_y_c-face_l_y_c)**2)
             d4 = np.sqrt((hand_2_x_c-face_r_x_c)**2+(hand_2_y_c-face_r_y_c)**2)
+
             d = [d1, d2, d3, d4]
+
             hands_on_face = 0
             thresh3 = 100
 
             if any([i < thresh3 for i in d]):
                 cv2.putText(image, "distracted", (0, 100), font,
                             1, (0, 255, 0), 2, cv2.LINE_AA)
-                hands
+                #hands
 
             """cv2.putText(image, 'c', (face_r_x_c, face_r_y_c),
                         font, 0.5, (0, 0, 255), 2, cv2.LINE_AA)
