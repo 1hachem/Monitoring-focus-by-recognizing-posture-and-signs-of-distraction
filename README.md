@@ -16,7 +16,7 @@ We aim to use AI to initiate the solving of this daily-life issue.
 # How we built it
 Using AI and machine learning techniques we are able to detect the posture of the user in front of the screen, from that we monitor the focus state of the user.
 
-#Challenges we ran into
+# Challenges we ran into
 * real time stream of data
 * time constraints
 
