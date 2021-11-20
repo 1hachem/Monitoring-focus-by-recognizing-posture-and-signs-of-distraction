@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 import matplotlib.pyplot as plt
 import time
-import statsmodels.api as sm
+#import statsmodels.api as sm
 import csv
 import subprocess
 
