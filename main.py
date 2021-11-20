@@ -5,6 +5,10 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 import matplotlib.pyplot as plt
 import time
+import statsmodels.api as sm
+import csv
+import subprocess
+
 
 
 mp_drawing = mp.solutions.drawing_utils
@@ -19,13 +23,15 @@ cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 frameWidth = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
 frameHeight = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
-focus_index = [100]
-
 positions = defaultdict(list)
 face_edge_r = defaultdict(list)
 face_edge_l = defaultdict(list)
-eye_1 = defaultdict(list)
-eye_2 = defaultdict(list)
+#subprocess.call(['python', 'read.py'])
+data = []
+elapsed_time = []
+with open('data.csv', 'w') as csv_file:
+    csv_writer = csv.DictWriter(csv_file, fieldnames=["state","yawn","closed","hands_on_face","away","time"])
+    csv_writer.writeheader()
 
 with mp_face_mesh.FaceMesh(
         max_num_faces=1,
@@ -39,12 +45,12 @@ with mp_face_mesh.FaceMesh(
 
         while cap.isOpened():
             success, image = cap.read()
-            image = cv2.flip(image, 1)
             if not success:
                 print("Ignoring empty camera frame.")
                 # If loading a video, use 'break' instead of 'continue'.
                 continue
 
+            font = cv2.FONT_HERSHEY_SIMPLEX
             # To improve performance, optionally mark the image as not writeable to
             # pass by reference.
             image.flags.writeable = False
@@ -54,6 +60,11 @@ with mp_face_mesh.FaceMesh(
             # Draw the face mesh annotations on the image.
             image.flags.writeable = True
             image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+            state = 1
+            yawn = 0
+            hands_on_face = 0
+            closed = 0
+            away = 0
 
             if results_face.multi_face_landmarks:
                 for face_landmarks in results_face.multi_face_landmarks:
@@ -71,20 +82,23 @@ with mp_face_mesh.FaceMesh(
                     b = np.sqrt((face[10][0]-face[152][0]) **
                                 2+(face[10][1]-face[152][1])**2)
 
-                    font = cv2.FONT_HERSHEY_SIMPLEX
+                   
                     thresh1 = 0.21
                     thresh2 = 0.4
-                    away = 0
+            
 
                     if a < thresh1:
+                        state=0
                         cv2.putText(image, "distracted", (0, 100), font,
                                     1, (0, 255, 0), 2, cv2.LINE_AA)
-                        away += 1
+                        away = 1
 
                     if b < thresh2:
+                        state=0
                         cv2.putText(image, "distracted", (0, 100), font,
                                     1, (0, 255, 0), 2, cv2.LINE_AA)
-                        away += 1
+                        away = 1
+
 
                     d5 = np.sqrt((face[160][0] - face[144][0])**2 + (face[160][1] - face[144][1])**2)
                     d6 = np.sqrt((face[158][0] - face[153][0])**2 + (face[158][1] - face[153][1])**2)
@@ -99,17 +113,19 @@ with mp_face_mesh.FaceMesh(
                     if (d5 + d6) / (2 * d7) < thresh_eye and (d8 + d9) / (2 * d10) < thresh_eye:
                         cv2.putText(image, "distracted", (0, 100), font,
                                     1, (0, 255, 0), 2, cv2.LINE_AA)
-                        away += 1
+                        closed = 1
 
                     d11 = np.sqrt((face[13][0] - face[14][0])**2 + (face[13][1] - face[14][1])**2)
                     d12 = np.sqrt((face[78][0] - face[308][0])**2 + (face[78][1] - face[308][1])**2)
 
-                    thresh_yawn = 1.5
+                    thresh_yawn = 1
 
                     if d11 / d12 > thresh_yawn:
+                        state=0
                         cv2.putText(image, "distracted", (0, 100), font,
                                     1, (0, 255, 0), 2, cv2.LINE_AA)
-                        away += 1
+                        yawn = 1
+
 
                     mp_drawing.draw_landmarks(
                         image=image,
@@ -135,6 +151,7 @@ with mp_face_mesh.FaceMesh(
                         connection_drawing_spec=mp_drawing_styles
                         .get_default_face_mesh_iris_connections_style())"""
             else:
+                state = 0
                 cv2.putText(image, "distracted", (0, 100), font,
                             1, (0, 255, 0), 2, cv2.LINE_AA)
             # Flip the image horizontally for a selfie-view display.
@@ -156,7 +173,6 @@ with mp_face_mesh.FaceMesh(
                      401, 366, 447, 389, 372, 251, 284, 332, 297]
                 l = [148, 176, 140, 149, 170, 169, 136, 172, 138, 215,
                      177, 137, 227, 143, 162, 21, 54, 103, 67, 109]
-
                 for face in results_face.multi_face_landmarks:
                     i = 0
                     for landmark in face.landmark:
@@ -206,26 +222,27 @@ with mp_face_mesh.FaceMesh(
 
                     mp_drawing.draw_landmarks(
                         image, hand, mp_hands_module.HAND_CONNECTIONS)
+                    H = hand.landmark
+                    cv2.circle(image, (int(H[9].x*shape[1]), int(H[9].y*shape[0])),
+                               radius=5, color=(225, 255, 255), thickness=5)
+                    data.append(H[9].x)
 
                     i += 1
 
-            else:
-                positions[i].append((0, 0))
 
             d1 = np.sqrt((hand_1_x_c-face_l_x_c)**2+(hand_1_y_c-face_l_y_c)**2)
             d2 = np.sqrt((hand_1_x_c-face_r_x_c)**2+(hand_1_y_c-face_r_y_c)**2)
             d3 = np.sqrt((hand_2_x_c-face_l_x_c)**2+(hand_2_y_c-face_l_y_c)**2)
             d4 = np.sqrt((hand_2_x_c-face_r_x_c)**2+(hand_2_y_c-face_r_y_c)**2)
-
             d = [d1, d2, d3, d4]
-
             hands_on_face = 0
             thresh3 = 100
 
             if any([i < thresh3 for i in d]):
+                state = 0
                 cv2.putText(image, "distracted", (0, 100), font,
                             1, (0, 255, 0), 2, cv2.LINE_AA)
-                #hands
+                hands_on_face=1
 
             """cv2.putText(image, 'c', (face_r_x_c, face_r_y_c),
                         font, 0.5, (0, 0, 255), 2, cv2.LINE_AA)
@@ -235,19 +252,33 @@ with mp_face_mesh.FaceMesh(
                         font, 0.5, (0, 0, 255), 2, cv2.LINE_AA)
             cv2.putText(image, 'c', (hand_2_x_c, hand_2_y_c),
                         font, 0.5, (0, 0, 255), 2, cv2.LINE_AA)"""
-
-            focus_index.append(
-                focus_index[-1] - away - hands_on_face - away*hands_on_face)
+           
             cv2.imshow('image', image)
+            end = time.strftime("%H:%M:%S", time.localtime(time.time()))
+
+
+            with open('data.csv', 'a') as csv_file:
+                csv_writer = csv.DictWriter(csv_file,fieldnames=["state","yawn","closed","hands_on_face","away","time"])
+
+                info = {
+                    "state": state,
+                    "yawn":yawn,
+                    "closed":closed,
+                    "hands_on_face":hands_on_face,
+                    "away":away,
+                    "time":end,
+
+                }
+
+                csv_writer.writerow(info)
+
+    
             # cv2.imshow('image', cv2.flip(image, 1))
             # closing functionalities
             if cv2.waitKey(5) & 0xFF == 27:
                 break
-
             if cv2.getWindowProperty('image', cv2.WND_PROP_VISIBLE) < 1:
                 break
 cap.release()
 
 
-plt.plot(range(len(focus_index)), focus_index)
-plt.show()
