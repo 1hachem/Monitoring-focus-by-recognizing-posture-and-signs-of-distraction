@@ -285,7 +285,6 @@ with mp_face_mesh.FaceMesh(
 
             if (not launched_read) and (time.time() - start > 0.3):
                 thread.start()
-                #thread.join()
                 launched_read = True
     
             # closing functionalities

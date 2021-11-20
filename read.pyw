@@ -3,14 +3,17 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import pandas as pd
 import numpy as np
+import matplotlib as mpl
+mpl.rcParams['toolbar'] = 'None'
+plt.style.use('dark_background')
+print(plt.style.available)
 
-
-plt.style.use('ggplot')
 c = [0.01,0.01,0.1,0.03]
 index = [1]
 yawn_time = []
 last_unfocus = []
-wid = 50
+wid = 100
+
 
 def animate(i):
     data = pd.read_csv('data.csv')
@@ -48,23 +51,30 @@ def animate(i):
     new_index = max(new_index,0)
     index.append(min(1,new_index))
     plt.cla()
+    plt.ylabel("Focus index")
+    plt.xlabel("time")
     if len(index)<wid:
         if state[-1] == 0:
-            plt.plot(range(len(index)), index, label='distracted', color='r')
+            plt.plot(range(len(index)), index, label='distracted', color='r',linewidth=2)
+            plt.title("distracted",color="r")
         else :
-            plt.plot(range(len(index)), index, label='focused', color='g')
+            plt.plot(range(len(index)), index, label='focused', color='g',linewidth=2)
+            plt.title("Focused",color="g")
     else:
         if state[-1] == 0:
-            plt.plot(list(range(len(index)))[-wid:], index[-wid:], label='distracted', color='r')
+            plt.plot(list(range(len(index)))[-wid:], index[-wid:], color='r',linewidth=2)
+            plt.title("distracted",color="r")
         else :
-            plt.plot(list(range(len(index)))[-wid:], index[-wid:], label='focused', color='g')
+            plt.plot(list(range(len(index)))[-wid:], index[-wid:], color='g',linewidth=2)
+            plt.title("Focused",color="g")
+    
 
+    
 
-    plt.legend(loc='upper left')
 
 
 ani = FuncAnimation(plt.gcf(), animate, interval=10)
-plt.tight_layout()
+#plt.tight_layout()
 plt.show()
 
     
