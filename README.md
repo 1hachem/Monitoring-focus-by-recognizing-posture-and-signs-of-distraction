@@ -7,7 +7,7 @@ Losing focus and spending multiple unproductive hours in front of our screens tr
   
 We aim to use AI to initiate the solving of this daily-life issue.
 
-# What it does
+# What it does 
 * detects the posture of the user
 * tracks the eyes of the user
 * recognize the spatial orientation of the user's head
