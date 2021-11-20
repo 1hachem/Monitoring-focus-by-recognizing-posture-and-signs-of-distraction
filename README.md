@@ -4,7 +4,7 @@
 Losing focus and spending multiple unproductive hours in front of our screens trying to get the job done is frustrating.
 \
 ```["students", "freelancers", "researchers", "workers"]``` we all share this struggle.
-
+  
 We aim to use AI to initiate the solving of this daily-life issue.
 
 # What it does
