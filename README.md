@@ -18,7 +18,7 @@ Using AI and machine learning techniques we are able to detect the posture of th
 * real time stream of data
 * time constraints
 
-#Accomplishments that we're proud of
+# Accomplishments that we're proud of
 * implemented a working AI (machine learning) system for focus tracking and productivity optimization.
 * next winners.
 
